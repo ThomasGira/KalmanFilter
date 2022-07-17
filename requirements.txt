@@ -2,3 +2,5 @@ tk
 smbus2
 RPi.GPIO
 serial
+pynmeagps
+humanfriendly

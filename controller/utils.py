@@ -12,21 +12,35 @@ class Quaternion():
         self._c = c
         self._d = d
     
-    def plus(self,q):
+    def _plus(self,q):
         a = self._a + q._a
         b = self._b + q._b
         c = self._c + q._c
         d = self._d + q._d
         return Quaternion(a,b,c,d)
     
-    def minus(self,q):
+    def _sub(self,q):
         a = self._a - q._a
         b = self._b - q._b
         c = self._c - q._c
         d = self._d - q._d
         return Quaternion(a,b,c,d)
     
-    def hamilton(self,q):
+    def _plus_scalar(self,s):
+        a = self._a + s
+        b = self._b + s
+        c = self._c + s
+        d = self._d + s
+        return Quaternion(a,b,c,d)
+    
+    def _mult_scalar(self,s):
+        a = self._a * s
+        b = self._b * s
+        c = self._c * s
+        d = self._d * s
+        return Quaternion(a,b,c,d)
+    
+    def _hamilton(self,q):
         a1 = self._a
         b1 = self._b
         c1 = self._c
@@ -50,14 +64,6 @@ class Quaternion():
 
         return Quaternion(a,-b,-c,-d)
 
-    def integrate(self,dt):
-        a = self._a*dt
-        b = self._b*dt
-        c = self._c*dt
-        d = self._d*dt
-
-        return Vector(a,b,c,d)
-
     def unit(self):
         a = self._a
         b = self._b
@@ -71,13 +77,6 @@ class Quaternion():
         d/=mag
         return Quaternion(a,b,c,d)
         
-    def gravity(self,attitude,gravity):
-        unit_attitude = attitude.unit()
-        conjugate_unit_attitude = unit_attitude.conjugate()
-        adjusted_gravity = unit_attitude.hamilton(gravity).hamilton(conjugate_unit_attitude)
-        minus_gravity = self.minus(adjusted_gravity)
-        return minus_gravity
-
     def json(self):
         a = self._a
         b = self._b
@@ -91,75 +90,52 @@ class Quaternion():
         c = self._c
         d = self._d
 
-        string= "a: {:.2f} b: {:.2f} c: {:.2f} d: {:.2f}".format(a,b,c,d)
+        string= "a: {:.5f} b: {:.5f} c: {:5f} d: {:.5f}".format(a,b,c,d)
         print(string)
-
-    def vector(self):
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-
-        return Vector(a,b,c,d)
         
-class Vector():
-    def __init__(self,a=1,b=0,c=0,d=0):
-        self._a = a
-        self._b = b
-        self._c = c
-        self._d = d
+    def mag(self):
+        a = self._a
+        b = self._b
+        c = self._c
+        d = self._d
+
+        return (a**2+ b**2 + c**2 +d**2)**.5
+
+    def __add__(self,other):
+        if type(other) == int or type(other) == float:
+            return self._plus_scalar(other)
+        if type(other) == Quaternion:
+            return self._plus(other)
+        raise TypeError
     
-    def plus(self,q):
-        a = self._a + q._a
-        b = self._b + q._b
-        c = self._c + q._c
-        d = self._d + q._d
-        return Vector(a,b,c,d)
-
-    def integrate(self,dt):
-        a = self._a*dt
-        b = self._b*dt
-        c = self._c*dt
-        d = self._d*dt
-
-        return Vector(a,b,c,d)
-
-    def get(self):
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-
-        return(a,b,c,d)
-
-    def unit(self):
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-
-        mag = (a**2+ b**2 + c**2 +d**2)**.5
-        a/=mag
-        b/=mag
-        c/=mag
-        d/=mag
-        return Vector(a,b,c,d)
-
-    def print(self):
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-
-        string= "a: {:.2f} b: {:.2f} c: {:.2f} d: {:.2f}".format(a,b,c,d)
-        print(string)
-
-    def json(self):
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-        return json.dumps({'a':a,'b':b,'c':c,'d':d})
-
-
+    def __sub__(self,other):
+        if type(other) == int or type(other) == float:
+            return self._plus_scalar(-other)
+        if type(other) == Quaternion:
+            return self._sub(other)
+        raise TypeError
     
+    
+    def __mul__(self,other):
+        if type(other) == int or type(other) == float:
+            return self._mult_scalar(other)
+        if type(other) == Quaternion:
+            return self._hamilton(other)
+        raise TypeError
+    
+    def __div__(self,other):
+        if type(other) == int or type(other) == float:
+            return self._mult_scalar(1./other)
+        raise TypeError
+
+        
+
+
+def meters_to_degrees(meters):
+    EARTH_RADIUS_M = 6371000
+    PI = 3.1415926536
+    #using small angle approximation sin theta ~= theta
+    theta = meters/EARTH_RADIUS_M
+    #Convert to degrees
+    degrees = theta*360/PI
+    return degrees
