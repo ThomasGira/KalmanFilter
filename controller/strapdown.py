@@ -39,7 +39,7 @@ class StrapDown():
                 'imu':self._accl.json(),
                 'omega':self._omega.json()})
             self._events.append(event)
-            if self._attitude.mag() > 5:
+            if self._attitude.mag() > 1.1:
                 self._attitude = self._attitude.unit()
     
     def _thread_function(self):
@@ -58,8 +58,8 @@ class StrapDown():
         if abs(ax) > 100 or  abs(ay) > 100 or abs(az) > 100:
             print(f"Acceleration too hgih: ({ax},{ay},{az})")
         omega = Quaternion(0,wx,wy,wz)
-        a_b = Quaternion(0,ax,ay,az)
         self._gyro = omega
+        a_b = Quaternion(0,ax,ay,az)
         self._accl = a_b
 
         #Integrate Gyroscope to update Attitude
@@ -67,23 +67,21 @@ class StrapDown():
         self._prev_omega = omega
         self._attitude += dq_k * dt
 
-        #Error Correction
-        error = ((self._attitude*self._attitude.conjugate())-Quaternion())*.5
-        self._attitude = (Quaternion() - error)*self._attitude
+        # #Error Correction
+        # error = ((self._attitude*self._attitude.conjugate())-Quaternion())*.5
+        # self._attitude = (Quaternion() - error)*self._attitude
         print("----------------------------------------")
-        omega.print()
-        error.print()
         self._attitude.print()
-
         #Subtract out gravity, convert acceleration to Inertial Frame and Integrate to update position
         a_i_g = self._attitude * a_b * self._attitude.conjugate()
-        g = self._attitude * self._gravity * self._attitude.conjugate()
-        a_i = a_i_g - g
+        a_i = a_i_g - self._gravity
         v_i = a_i * dt
         self._velocity = self._velocity + v_i
         position = self._velocity * dt
         position._a = 0 # Kinda Hacky but there is no rotation just xyz position
         self._position = self._position + position
+        self._velocity.print()
+        self._position.print()
     
     def _get_gravity(self):
         # Get Gravity

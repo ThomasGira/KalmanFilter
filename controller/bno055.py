@@ -314,12 +314,13 @@ class BNO055():
         return (x/900.0, y/900.0, z/900.0)
 
     def read_accl_mag_gyro(self):
+        t0 = time.time()
         ax,ay,az,mx,my,mz,gx,gy,gz = self._read_vector(self.BNO055_ACCEL_DATA_X_LSB_ADDR,9)
+        t1 = time.time()
         a = (ax/100.0,ay/100.0,az/100.0)
         m = (mx,my,mz)
         g = (gx/900.0,gy/900.0,gz/900.0)
-        t = time.time()
-        return(a,m,g,t)
+        return(a,m,g,(t0+t1)/2.)
 
     def _set_mode(self, mode):
         """Set operation mode for BNO055 sensor.  Mode should be a value from

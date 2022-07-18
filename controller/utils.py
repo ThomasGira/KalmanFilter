@@ -52,7 +52,7 @@ class Quaternion():
         d2 = q._d
 
         a = a1*a2 - b1*b2 - c1*c2 - d1*d2
-        b = a1*b1 + b1*a2 + c1*d2 - d1*c2
+        b = a1*b2 + b1*a2 + c1*d2 - d1*c2
         c = a1*c2 - b1*b2 + c1*a2 + d1*b2
         d = a1*d2 + b1*c2 - c1*b2 + d1*a2
         return Quaternion(a,b,c,d)
